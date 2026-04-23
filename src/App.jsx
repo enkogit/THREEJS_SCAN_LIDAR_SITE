@@ -218,27 +218,35 @@ export default function ScaneticaSite() {
         </div>
       </section>
 
-      {/* TECHNOLOGY SECTION */}
+      {/* ============================================ */}
+      {/* TECHNOLOGY SECTION - Fully Responsive & Centered on Mobile */}
+      {/* ============================================ */}
       <section id="technology" className="bg-black py-24 border-y border-white/10">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="flex flex-col items-center text-center gap-12 md:grid md:grid-cols-2 md:items-center md:text-left md:gap-16">
+            
+            {/* Text Content */}
             <div>
               <div className="text-[#00F0FF] text-sm tracking-[4px] font-medium mb-4">ADVANCED TECHNOLOGY</div>
-              <h2 className="text-7xl font-semibold tracking-tighter leading-none mb-8 text-white">
+              
+              <h2 className="text-5xl md:text-7xl font-semibold tracking-tighter leading-none mb-6 md:mb-8 text-white">
                 LiDAR & Photogrammetry<br />for Digital Twins
               </h2>
-              <p className="text-2xl text-[#C8D0FF] mb-10 max-w-lg">
+              
+              <p className="text-xl md:text-2xl text-[#C8D0FF] mb-8 md:mb-10 max-w-lg mx-auto md:mx-0">
                 We combine survey-grade terrestrial LiDAR, drone photogrammetry, and advanced processing software to deliver 
                 precise 3D scanning results and digital twins across the USA and Canada.
               </p>
-              <div className="flex flex-wrap gap-3">
+              
+              <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                 {["Leica RTC360", "Trimble X12", "FARO Focus Premium", "DJI Matrice LiDAR", "RealityCapture", "Autodesk BIM 360"].map((tech, i) => (
                   <div key={i} className="px-5 py-2 bg-white/10 rounded-full text-sm border border-white/10">{tech}</div>
                 ))}
               </div>
             </div>
 
-            <div className="h-[520px] rounded-3xl overflow-hidden border border-white/10 bg-black">
+            {/* 3D Model Viewer */}
+            <div className="h-[520px] w-full rounded-3xl overflow-hidden border border-white/10 bg-black">
               <Canvas camera={{ position: [0, 12, 14], fov: 42 }}>
                 <ambientLight intensity={0.9} />
                 <directionalLight position={[15, 20, 10]} intensity={2} />
@@ -262,6 +270,7 @@ export default function ScaneticaSite() {
                 />
               </Canvas>
             </div>
+
           </div>
         </div>
       </section>
@@ -284,7 +293,7 @@ export default function ScaneticaSite() {
           <div className="group relative overflow-hidden rounded-3xl h-[520px] bg-zinc-950 border border-white/10 flex flex-col">
             <div className="h-[320px] bg-black">
               <ProjectViewer 
-                modelPath="/models/67th_st_pit__pheonix_az_4k.glb"
+                modelPath="/models/67th_st_pit__pheonix_a_1k.glb"
                 scale={0.75}
                 position={[-10, -1, 0]}
                 cameraPosition={[0, 25, 14]}
