@@ -1,30 +1,29 @@
-import React, { useMemo, useRef, Suspense } from 'react';
+import React, { useMemo, useRef, Suspense, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { ArrowRight, Target, Zap, Users } from 'lucide-react';
 
 // ============================================
-// 1. WIREFRAME TERRAIN COMPONENT
+// 1. TERRAIN COMPONENT (Auto Light on Mobile)
 // ============================================
-function AnimatedTerrain() {
+function AnimatedTerrain({ isMobile }) {
   const terrainRef = useRef();
 
   const terrainGeometry = useMemo(() => {
-    // Much larger and wider terrain
-    const geo = new THREE.PlaneGeometry(320, 320, 160, 160);
+    // Use lighter terrain on mobile for better performance
+    const size = isMobile ? 180 : 320;
+    const segments = isMobile ? 80 : 160;
+
+    const geo = new THREE.PlaneGeometry(size, size, segments, segments);
     const vertices = geo.attributes.position.array;
 
     function noise(x, y) {
       return (
-        // Large dramatic mountains
-        Math.sin(x * 0.045) * Math.cos(y * 0.045) * 38 +
-        // Medium mountains
-        Math.sin(x * 0.09) * Math.cos(y * 0.085) * 22 +
-        // Smaller ridges
-        Math.sin(x * 0.18) * Math.cos(y * 0.17) * 11 +
-        // Fine detail
-        Math.sin(x * 0.36) * Math.cos(y * 0.34) * 5
+        Math.sin(x * 0.045) * Math.cos(y * 0.045) * (isMobile ? 28 : 38) +
+        Math.sin(x * 0.09) * Math.cos(y * 0.085) * (isMobile ? 16 : 22) +
+        Math.sin(x * 0.18) * Math.cos(y * 0.17) * (isMobile ? 8 : 11) +
+        Math.sin(x * 0.36) * Math.cos(y * 0.34) * (isMobile ? 3 : 5)
       );
     }
 
@@ -37,12 +36,12 @@ function AnimatedTerrain() {
     geo.attributes.position.needsUpdate = true;
     geo.computeVertexNormals();
     return geo;
-  }, []);
+  }, [isMobile]);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
-    const radius = 125;        // Camera further away for larger terrain
-    const height = 95;
+    const radius = isMobile ? 95 : 125;
+    const height = isMobile ? 72 : 95;
 
     state.camera.position.x = Math.sin(time * 0.08) * radius;
     state.camera.position.z = Math.cos(time * 0.08) * radius;
@@ -67,8 +66,7 @@ function AnimatedTerrain() {
 }
 
 // ============================================
-// 2. PROJECT VIEWER COMPONENT (Updated)
-// Now supports tilt and enableZoom per model
+// 2. 3D MODEL VIEWER (Reusable Component)
 // ============================================
 function ProjectViewer({ 
   modelPath, 
@@ -76,14 +74,16 @@ function ProjectViewer({
   position = [0, -1, 0],
   cameraPosition = [0, 9, 13],
   cameraTarget = [0, 3, 0],
-  fov = 44,
-  tilt = [0, 0, 0],           // New: tilt/rotation for the model
-  enableZoom = false          // New: toggle zoom per model
+  tilt = [0, 0, 0],
+  enableZoom = false 
 }) {
   const { scene } = useGLTF(modelPath);
 
   return (
-    <Canvas camera={{ position: cameraPosition, fov }}>
+    <Canvas 
+      camera={{ position: cameraPosition, fov: 44 }}
+      style={{ background: '#000000' }}
+    >
       <ambientLight intensity={0.8} />
       <directionalLight position={[12, 16, 6]} intensity={1.5} />
       
@@ -116,26 +116,26 @@ function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0f172a]/95 backdrop-blur-lg border-b border-white/10">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#05070F]/95 backdrop-blur-lg border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-20">
         <div className="flex items-center gap-3">
           <img 
             src="/scanetica_logo.png" 
             alt="Scanetica Logo" 
-            className="h-18 w-auto drop-shadow-md" 
+            className="h-11 w-auto drop-shadow-md" 
           />
         </div>
 
         <div className="hidden md:flex items-center gap-9 text-sm font-medium">
-          <button onClick={() => scrollTo('services')} className="hover:text-[#67e8f9] transition-colors">Services</button>
-          <button onClick={() => scrollTo('technology')} className="hover:text-[#67e8f9] transition-colors">Technology</button>
-          <button onClick={() => scrollTo('cases')} className="hover:text-[#67e8f9] transition-colors">Case Studies</button>
-          <button onClick={() => scrollTo('contact')} className="hover:text-[#67e8f9] transition-colors">Contact</button>
+          <button onClick={() => scrollTo('services')} className="hover:text-[#00F0FF] transition-colors">Services</button>
+          <button onClick={() => scrollTo('technology')} className="hover:text-[#00F0FF] transition-colors">Technology</button>
+          <button onClick={() => scrollTo('cases')} className="hover:text-[#00F0FF] transition-colors">Case Studies</button>
+          <button onClick={() => scrollTo('contact')} className="hover:text-[#00F0FF] transition-colors">Contact</button>
         </div>
 
         <button 
           onClick={() => scrollTo('contact')}
-          className="px-6 py-2.5 bg-[#67e8f9] hover:bg-white text-[#0f172a] font-semibold rounded-2xl flex items-center gap-2 transition-all active:scale-95"
+          className="px-6 py-2.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl flex items-center gap-2 transition-all active:scale-95"
         >
           Get a Quote <ArrowRight size={18} />
         </button>
@@ -145,9 +145,22 @@ function Navbar() {
 }
 
 // ============================================
-// 4. MAIN WEBSITE COMPONENT
+// 4. MAIN WEBSITE
 // ============================================
 export default function ScaneticaSite() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile device for lighter terrain
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <div className="bg-[#05070F] text-[#E0E7FF] overflow-hidden">
       <Navbar />
@@ -159,12 +172,26 @@ export default function ScaneticaSite() {
             camera={{ position: [0, 78, 105], fov: 50 }} 
             className="w-full h-full"
             style={{ background: '#05070F' }}
+            gl={{ 
+              powerPreference: "high-performance",
+              antialias: !isMobile,        // Disable antialias on mobile
+              alpha: true 
+            }}
           >
             <ambientLight intensity={0.6} />
             <directionalLight position={[50, 80, 30]} intensity={1.2} />
-            <AnimatedTerrain />
+            
+            <AnimatedTerrain isMobile={isMobile} />
+            
             <fog attach="fog" args={['#05070F', 85, 220]} />
           </Canvas>
+        </div>
+
+        {/* Loading Fallback (prevents white screen) */}
+        <div className="absolute inset-0 flex items-center justify-center z-5 pointer-events-none">
+          <div className="text-center text-white/50 text-sm">
+            Loading 3D Experience...
+          </div>
         </div>
 
         <div className="absolute inset-0 bg-[#05070F]/50 z-10" />
@@ -230,14 +257,11 @@ export default function ScaneticaSite() {
         </div>
       </section>
 
-      {/* ============================================ */}
-      {/* TECHNOLOGY SECTION - Fully Responsive & Centered on Mobile */}
-      {/* ============================================ */}
+      {/* TECHNOLOGY SECTION */}
       <section id="technology" className="bg-black py-24 border-y border-white/10">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col items-center text-center gap-12 md:grid md:grid-cols-2 md:items-center md:text-left md:gap-16">
             
-            {/* Text Content */}
             <div>
               <div className="text-[#00F0FF] text-sm tracking-[4px] font-medium mb-4">ADVANCED TECHNOLOGY</div>
               
@@ -259,37 +283,21 @@ export default function ScaneticaSite() {
 
             {/* 3D Model Viewer */}
             <div className="h-[520px] w-full rounded-3xl overflow-hidden border border-white/10 bg-black">
-              <Canvas camera={{ position: [0, 12, 14], fov: 42 }}>
-                <ambientLight intensity={0.9} />
-                <directionalLight position={[15, 20, 10]} intensity={2} />
-                <pointLight position={[-12, 10, -10]} color="#00F0FF" intensity={0.8} />
-                
-                <Suspense fallback={null}>
-                  <primitive 
-                    object={useGLTF('/models/thermal_power_plant_chimney_8k.glb').scene} 
-                    scale={0.1} 
-                    position={[5, -1, -5]} 
-                  />
-                </Suspense>
-                
-                <OrbitControls 
-                  autoRotate 
-                  autoRotateSpeed={0.18} 
-                  enableZoom={true}
-                  minDistance={5}
-                  maxDistance={30}
-                  target={[0, 4, 0]}
-                />
-              </Canvas>
+              <ProjectViewer 
+                modelPath="/models/thermal_power_plant_chimney_8k.glb"
+                scale={0.1}
+                position={[5, -1, -5]}
+                cameraPosition={[0, 12, 14]}
+                cameraTarget={[0, 4, 0]}
+                tilt={[0, 0, 0]}
+                enableZoom={true}
+              />
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* ============================================ */}
-      {/* FEATURED PROJECTS - Full Control Per Model */}
-      {/* ============================================ */}
+      {/* FEATURED PROJECTS */}
       <section id="cases" className="max-w-7xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
           <div className="text-[#00F0FF] text-sm tracking-[4px] font-medium mb-4">REAL RESULTS</div>
@@ -310,8 +318,7 @@ export default function ScaneticaSite() {
                 position={[0, 20, 0]}
                 cameraPosition={[0, 25, 14]}
                 cameraTarget={[0, 5, 0]}
-                fov={43}
-                tilt={[0, -5, 0]}           // Tilted for better view
+                tilt={[0, -5, 0]}
                 enableZoom={true}
               />
             </div>
@@ -333,7 +340,6 @@ export default function ScaneticaSite() {
                 position={[0, 0, 0]}
                 cameraPosition={[-5, 5, 15]}
                 cameraTarget={[0, 2, 0]}
-                fov={45}
                 tilt={[0, 0, 0]}
                 enableZoom={true}
               />
@@ -356,7 +362,6 @@ export default function ScaneticaSite() {
                 position={[0, -2.4, 0]}
                 cameraPosition={[0, 9.5, 13.5]}
                 cameraTarget={[0, 3.2, 0]}
-                fov={42}
                 tilt={[0.1, -0.15, 0]}
                 enableZoom={true}
               />
@@ -379,7 +384,6 @@ export default function ScaneticaSite() {
                 position={[0, -1.3, 0]}
                 cameraPosition={[0, 9, 12.5]}
                 cameraTarget={[0, 2.6, 0]}
-                fov={43}
                 tilt={[0.18, 0.05, 0]}
                 enableZoom={true}
               />
