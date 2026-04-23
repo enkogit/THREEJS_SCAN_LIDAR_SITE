@@ -11,14 +11,20 @@ function AnimatedTerrain() {
   const terrainRef = useRef();
 
   const terrainGeometry = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(240, 240, 140, 140);
+    // Much larger and wider terrain
+    const geo = new THREE.PlaneGeometry(320, 320, 160, 160);
     const vertices = geo.attributes.position.array;
 
     function noise(x, y) {
       return (
-        Math.sin(x * 0.06) * Math.cos(y * 0.06) * 22 +
-        Math.sin(x * 0.13) * Math.cos(y * 0.12) * 12 +
-        Math.sin(x * 0.27) * Math.cos(y * 0.25) * 6
+        // Large dramatic mountains
+        Math.sin(x * 0.045) * Math.cos(y * 0.045) * 38 +
+        // Medium mountains
+        Math.sin(x * 0.09) * Math.cos(y * 0.085) * 22 +
+        // Smaller ridges
+        Math.sin(x * 0.18) * Math.cos(y * 0.17) * 11 +
+        // Fine detail
+        Math.sin(x * 0.36) * Math.cos(y * 0.34) * 5
       );
     }
 
@@ -35,13 +41,13 @@ function AnimatedTerrain() {
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
-    const radius = 105;
-    const height = 78;
+    const radius = 125;        // Camera further away for larger terrain
+    const height = 95;
 
-    state.camera.position.x = Math.sin(time * 0.09) * radius;
-    state.camera.position.z = Math.cos(time * 0.09) * radius;
-    state.camera.position.y = height + Math.sin(time * 0.05) * 14;
-    state.camera.lookAt(0, 20, 0);
+    state.camera.position.x = Math.sin(time * 0.08) * radius;
+    state.camera.position.z = Math.cos(time * 0.08) * radius;
+    state.camera.position.y = height + Math.sin(time * 0.04) * 18;
+    state.camera.lookAt(0, 25, 0);
   });
 
   return (
@@ -110,25 +116,26 @@ function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#05070F]/95 backdrop-blur-xl border-b border-white/10">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0f172a]/95 backdrop-blur-lg border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-20">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[#00F0FF] rounded-xl flex items-center justify-center">
-            <span className="text-[#05070F] font-bold text-2xl">S</span>
-          </div>
-          <span className="text-3xl font-semibold tracking-tighter">scanetica</span>
+          <img 
+            src="/scanetica_logo.png" 
+            alt="Scanetica Logo" 
+            className="h-18 w-auto drop-shadow-md" 
+          />
         </div>
 
         <div className="hidden md:flex items-center gap-9 text-sm font-medium">
-          <button onClick={() => scrollTo('services')} className="hover:text-[#00F0FF] transition-colors">Services</button>
-          <button onClick={() => scrollTo('technology')} className="hover:text-[#00F0FF] transition-colors">Technology</button>
-          <button onClick={() => scrollTo('cases')} className="hover:text-[#00F0FF] transition-colors">Case Studies</button>
-          <button onClick={() => scrollTo('contact')} className="hover:text-[#00F0FF] transition-colors">Contact</button>
+          <button onClick={() => scrollTo('services')} className="hover:text-[#67e8f9] transition-colors">Services</button>
+          <button onClick={() => scrollTo('technology')} className="hover:text-[#67e8f9] transition-colors">Technology</button>
+          <button onClick={() => scrollTo('cases')} className="hover:text-[#67e8f9] transition-colors">Case Studies</button>
+          <button onClick={() => scrollTo('contact')} className="hover:text-[#67e8f9] transition-colors">Contact</button>
         </div>
 
         <button 
           onClick={() => scrollTo('contact')}
-          className="px-6 py-2.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl flex items-center gap-2 transition-all active:scale-95"
+          className="px-6 py-2.5 bg-[#67e8f9] hover:bg-white text-[#0f172a] font-semibold rounded-2xl flex items-center gap-2 transition-all active:scale-95"
         >
           Get a Quote <ArrowRight size={18} />
         </button>
@@ -163,12 +170,17 @@ export default function ScaneticaSite() {
         <div className="absolute inset-0 bg-[#05070F]/50 z-10" />
 
         <div className="relative z-20 max-w-5xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-5 py-1.5 rounded-full bg-white/10 text-sm mb-8 border border-white/20">
+          <div className="inline-flex items-center gap-2 px-5 py-1.5 rounded-full bg-white/10 text-sm border border-white/20">
             <div className="w-2 h-2 bg-[#00F0FF] rounded-full animate-pulse" /> 
-            Serving USA & Canada Nationwide
+            Serving USA & Canada Nationwide 
+            
+            <div className="flex items-center gap-1 ml-1">
+              <img src="/US.png" alt="USA Flag" className="h-4 w-auto rounded-sm" />
+              <img src="/CAN.png" alt="Canada Flag" className="h-4 w-auto rounded-sm" />
+            </div>
           </div>
           
-          <h1 className="text-[92px] md:text-[120px] font-semibold tracking-[-6px] leading-none mb-8 text-white">
+          <h1 className="text-[92px] md:text-[120px] font-semibold tracking-[-6px] leading-none mb-4 text-white">
             3D Laser Scanning<br />Services
           </h1>
           
@@ -256,7 +268,7 @@ export default function ScaneticaSite() {
                   <primitive 
                     object={useGLTF('/models/thermal_power_plant_chimney_8k.glb').scene} 
                     scale={0.1} 
-                    position={[0, -2, 0]} 
+                    position={[5, -1, -5]} 
                   />
                 </Suspense>
                 
@@ -266,7 +278,7 @@ export default function ScaneticaSite() {
                   enableZoom={true}
                   minDistance={5}
                   maxDistance={30}
-                  target={[0, 6, 0]}
+                  target={[0, 4, 0]}
                 />
               </Canvas>
             </div>
@@ -294,12 +306,12 @@ export default function ScaneticaSite() {
             <div className="h-[320px] bg-black">
               <ProjectViewer 
                 modelPath="/models/67th_st_pit__pheonix_a_1k.glb"
-                scale={0.75}
-                position={[-10, -1, 0]}
+                scale={0.2}
+                position={[0, 20, 0]}
                 cameraPosition={[0, 25, 14]}
-                cameraTarget={[0, 2.5, 0]}
+                cameraTarget={[0, 5, 0]}
                 fov={43}
-                tilt={[0.2, 0.1, 0]}           // Tilted for better view
+                tilt={[0, -5, 0]}           // Tilted for better view
                 enableZoom={true}
               />
             </div>
@@ -317,12 +329,12 @@ export default function ScaneticaSite() {
             <div className="h-[320px] bg-black">
               <ProjectViewer 
                 modelPath="/models/headquarters_building_office_building_4k.glb"
-                scale={0.1}
-                position={[0, -1.6, 0]}
-                cameraPosition={[0, 11, 15]}
-                cameraTarget={[0, 4.8, 0]}
-                fov={41}
-                tilt={[0.15, 0, 0]}
+                scale={0.05}
+                position={[0, 0, 0]}
+                cameraPosition={[-5, 5, 15]}
+                cameraTarget={[0, 2, 0]}
+                fov={45}
+                tilt={[0, 0, 0]}
                 enableZoom={true}
               />
             </div>
