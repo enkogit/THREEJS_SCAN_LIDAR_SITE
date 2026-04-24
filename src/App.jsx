@@ -130,7 +130,7 @@ export default function ScaneticaSite() {
 
   // Preload all 4K models for faster loading
   useEffect(() => {
-    useGLTF.preload("/models/67th_st_pit__pheonix_a_4k.glb");
+    useGLTF.preload("/models/67th_st_pit__pheonix_a_1k.glb");
     useGLTF.preload("/models/headquarters_building_office_building_4k.glb");
     useGLTF.preload("/models/highway_lnterchange_overpass_railway_village_4k.glb");
     useGLTF.preload("/models/linde_factory_industrial_installation_4k.glb");
@@ -142,7 +142,7 @@ export default function ScaneticaSite() {
   const DetailView = () => {
     const getModelConfig = () => {
       switch (selectedProject) {
-        case 'mining': return { path: "/models/67th_st_pit__pheonix_a_4k.glb", title: "67th Street Open Pit Mine", subtitle: "MINING • USA 2025" };
+        case 'mining': return { path: "/models/67th_st_pit__pheonix_a_1k.glb", title: "67th Street Open Pit Mine", subtitle: "MINING • USA 2025" };
         case 'office': return { path: "/models/headquarters_building_office_building_4k.glb", title: "Downtown Headquarters Tower", subtitle: "COMMERCIAL REAL ESTATE • CANADA 2025" };
         case 'highway': return { path: "/models/highway_lnterchange_overpass_railway_village_4k.glb", title: "Major Highway Interchange", subtitle: "INFRASTRUCTURE • USA 2025" };
         case 'factory': return { path: "/models/linde_factory_industrial_installation_4k.glb", title: "Linde Industrial Facility", subtitle: "OIL & GAS • CANADA 2025" };
@@ -336,7 +336,7 @@ export default function ScaneticaSite() {
                 onClick={() => setSelectedProject('mining')}
                 className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
               >
-                View 4K Model <ArrowRight size={18} />
+                View Model <ArrowRight size={18} />
               </button>
             </div>
           </div>
@@ -364,7 +364,7 @@ export default function ScaneticaSite() {
                 onClick={() => setSelectedProject('office')}
                 className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
               >
-                View 4K Model <ArrowRight size={18} />
+                View Model <ArrowRight size={18} />
               </button>
             </div>
           </div>
@@ -392,7 +392,7 @@ export default function ScaneticaSite() {
                 onClick={() => setSelectedProject('highway')}
                 className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
               >
-                View 4K Model <ArrowRight size={18} />
+                View Model <ArrowRight size={18} />
               </button>
             </div>
           </div>
@@ -420,7 +420,7 @@ export default function ScaneticaSite() {
                 onClick={() => setSelectedProject('factory')}
                 className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
               >
-                View 4K Model <ArrowRight size={18} />
+                View Model <ArrowRight size={18} />
               </button>
             </div>
           </div>
