@@ -128,7 +128,7 @@ export default function ScaneticaSite() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Preload all 4K models for faster loading
+  // Preload all models for faster loading
   useEffect(() => {
     useGLTF.preload("/models/67th_st_pit__pheonix_a_1k.glb");
     useGLTF.preload("/models/headquarters_building_office_building_4k.glb");
@@ -137,16 +137,48 @@ export default function ScaneticaSite() {
   }, []);
 
   // ============================================
-  // DETAIL VIEW WITH SMOOTH ANIMATION
+  // DETAIL VIEW - Mobile Optimized (NEW)
+  // Loads 1K on mobile and 4K on desktop for better performance
   // ============================================
   const DetailView = () => {
     const getModelConfig = () => {
+      const useLowRes = isMobile; // NEW: Use 1K on mobile, 4K on desktop
+
       switch (selectedProject) {
-        case 'mining': return { path: "/models/67th_st_pit__pheonix_a_1k.glb", title: "67th Street Open Pit Mine", subtitle: "MINING • USA 2025" };
-        case 'office': return { path: "/models/headquarters_building_office_building_4k.glb", title: "Downtown Headquarters Tower", subtitle: "COMMERCIAL REAL ESTATE • CANADA 2025" };
-        case 'highway': return { path: "/models/highway_lnterchange_overpass_railway_village_4k.glb", title: "Major Highway Interchange", subtitle: "INFRASTRUCTURE • USA 2025" };
-        case 'factory': return { path: "/models/linde_factory_industrial_installation_4k.glb", title: "Linde Industrial Facility", subtitle: "OIL & GAS • CANADA 2025" };
-        default: return null;
+        case 'mining':
+          return {
+            path: useLowRes 
+              ? "/models/67th_st_pit__pheonix_a_1k.glb" 
+              : "/models/67th_st_pit__pheonix_a_4k.glb",
+            title: "67th Street Open Pit Mine",
+            subtitle: "MINING • USA 2025"
+          };
+        case 'office':
+          return {
+            path: useLowRes 
+              ? "/models/headquarters_building_office_building_1k.glb" 
+              : "/models/headquarters_building_office_building_4k.glb",
+            title: "Downtown Headquarters Tower",
+            subtitle: "COMMERCIAL REAL ESTATE • CANADA 2025"
+          };
+        case 'highway':
+          return {
+            path: useLowRes 
+              ? "/models/highway_lnterchange_overpass_railway_village_1k.glb" 
+              : "/models/highway_lnterchange_overpass_railway_village_4k.glb",
+            title: "Major Highway Interchange",
+            subtitle: "INFRASTRUCTURE • USA 2025"
+          };
+        case 'factory':
+          return {
+            path: useLowRes 
+              ? "/models/linde_factory_industrial_installation_1k.glb" 
+              : "/models/linde_factory_industrial_installation_4k.glb",
+            title: "Linde Industrial Facility",
+            subtitle: "OIL & GAS • CANADA 2025"
+          };
+        default:
+          return null;
       }
     };
 
@@ -172,6 +204,13 @@ export default function ScaneticaSite() {
               </button>
             </div>
           </nav>
+
+          {/* Mobile Optimization Note - NEW */}
+          {isMobile && (
+            <div className="fixed top-20 left-0 right-0 z-[105] bg-[#05070F]/90 text-center py-1.5 text-xs text-[#00F0FF]">
+              Mobile optimized version (1K model)
+            </div>
+          )}
 
           <div className="pt-20 h-screen">
             <div className="h-full">
@@ -302,7 +341,7 @@ export default function ScaneticaSite() {
         </div>
       </section>
 
-      {/* FEATURED PROJECTS - WITH LOADING SPINNERS */}
+      {/* FEATURED PROJECTS SECTION */}
       <section id="cases" className="max-w-7xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
           <div className="text-[#00F0FF] text-sm tracking-[4px] font-medium mb-4">REAL RESULTS</div>
