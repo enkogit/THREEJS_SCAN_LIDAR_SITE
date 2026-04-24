@@ -2,7 +2,7 @@ import React, { useMemo, useRef, Suspense, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { ArrowRight, Target, Zap, Users, Loader2 } from 'lucide-react';
+import { ArrowRight, Target, Zap, Users, Loader2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ============================================
@@ -57,7 +57,7 @@ function AnimatedTerrain({ isMobile }) {
 }
 
 // ============================================
-// SECTION 2: 3D MODEL VIEWER WITH LOADING SPINNER
+// SECTION 2: 3D MODEL VIEWER
 // ============================================
 function ProjectViewer({ modelPath, scale = 0.5, position = [0, -1, 0], cameraPosition = [0, 9, 13], cameraTarget = [0, 3, 0], tilt = [0, 0, 0], enableZoom = false }) {
   const { scene } = useGLTF(modelPath);
@@ -128,7 +128,7 @@ export default function ScaneticaSite() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Preload all models for faster loading
+  // Preload models
   useEffect(() => {
     useGLTF.preload("/models/67th_st_pit__pheonix_a_1k.glb");
     useGLTF.preload("/models/headquarters_building_office_building_4k.glb");
@@ -137,48 +137,16 @@ export default function ScaneticaSite() {
   }, []);
 
   // ============================================
-  // DETAIL VIEW - Mobile Optimized (NEW)
-  // Loads 1K on mobile and 4K on desktop for better performance
+  // DETAIL VIEW (Works on both mobile and desktop)
   // ============================================
   const DetailView = () => {
     const getModelConfig = () => {
-      const useLowRes = isMobile; // NEW: Use 1K on mobile, 4K on desktop
-
       switch (selectedProject) {
-        case 'mining':
-          return {
-            path: useLowRes 
-              ? "/models/67th_st_pit__pheonix_a_1k.glb" 
-              : "/models/67th_st_pit__pheonix_a_4k.glb",
-            title: "67th Street Open Pit Mine",
-            subtitle: "MINING • USA 2025"
-          };
-        case 'office':
-          return {
-            path: useLowRes 
-              ? "/models/headquarters_building_office_building_1k.glb" 
-              : "/models/headquarters_building_office_building_4k.glb",
-            title: "Downtown Headquarters Tower",
-            subtitle: "COMMERCIAL REAL ESTATE • CANADA 2025"
-          };
-        case 'highway':
-          return {
-            path: useLowRes 
-              ? "/models/highway_lnterchange_overpass_railway_village_1k.glb" 
-              : "/models/highway_lnterchange_overpass_railway_village_4k.glb",
-            title: "Major Highway Interchange",
-            subtitle: "INFRASTRUCTURE • USA 2025"
-          };
-        case 'factory':
-          return {
-            path: useLowRes 
-              ? "/models/linde_factory_industrial_installation_1k.glb" 
-              : "/models/linde_factory_industrial_installation_4k.glb",
-            title: "Linde Industrial Facility",
-            subtitle: "OIL & GAS • CANADA 2025"
-          };
-        default:
-          return null;
+        case 'mining': return { path: "/models/67th_st_pit__pheonix_a_1k.glb", title: "67th Street Open Pit Mine", subtitle: "MINING • USA 2025" };
+        case 'office': return { path: "/models/headquarters_building_office_building_4k.glb", title: "Downtown Headquarters Tower", subtitle: "COMMERCIAL REAL ESTATE • CANADA 2025" };
+        case 'highway': return { path: "/models/highway_lnterchange_overpass_railway_village_4k.glb", title: "Major Highway Interchange", subtitle: "INFRASTRUCTURE • USA 2025" };
+        case 'factory': return { path: "/models/linde_factory_industrial_installation_4k.glb", title: "Linde Industrial Facility", subtitle: "OIL & GAS • CANADA 2025" };
+        default: return null;
       }
     };
 
@@ -193,25 +161,23 @@ export default function ScaneticaSite() {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[100] bg-[#05070F]"
         >
-          <nav className="fixed top-0 left-0 right-0 z-[110] bg-[#05070F]/95 backdrop-blur-lg border-b border-white/10">
+          {/* Top Bar */}
+          <div className="fixed top-0 left-0 right-0 z-[110] bg-[#05070F]/95 backdrop-blur-lg border-b border-white/10">
             <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-20">
-              <img src="/scanetica_logo.png" alt="Scanetica Logo" className="h-11 w-auto drop-shadow-md" />
+              <div className="flex items-center gap-3">
+                <img src="/scanetica_logo.png" alt="Scanetica Logo" className="h-11 w-auto drop-shadow-md" />
+              </div>
+              
               <button 
                 onClick={() => setSelectedProject(null)}
-                className="px-6 py-2.5 border border-white/30 hover:bg-white/10 rounded-2xl text-sm font-medium flex items-center gap-2 transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 border border-white/30 hover:bg-white/10 rounded-2xl text-sm font-medium transition-all"
               >
-                ← Back to Projects
+                <X size={18} /> Close
               </button>
             </div>
-          </nav>
+          </div>
 
-          {/* Mobile Optimization Note - NEW */}
-          {isMobile && (
-            <div className="fixed top-20 left-0 right-0 z-[105] bg-[#05070F]/90 text-center py-1.5 text-xs text-[#00F0FF]">
-              Mobile optimized version (1K model)
-            </div>
-          )}
-
+          {/* 3D Model */}
           <div className="pt-20 h-screen">
             <div className="h-full">
               <ProjectViewer 
@@ -375,7 +341,7 @@ export default function ScaneticaSite() {
                 onClick={() => setSelectedProject('mining')}
                 className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
               >
-                View Model <ArrowRight size={18} />
+                View 4K Model <ArrowRight size={18} />
               </button>
             </div>
           </div>
@@ -403,7 +369,7 @@ export default function ScaneticaSite() {
                 onClick={() => setSelectedProject('office')}
                 className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
               >
-                View Model <ArrowRight size={18} />
+                View 4K Model <ArrowRight size={18} />
               </button>
             </div>
           </div>
@@ -431,7 +397,7 @@ export default function ScaneticaSite() {
                 onClick={() => setSelectedProject('highway')}
                 className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
               >
-                View Model <ArrowRight size={18} />
+                View 4K Model <ArrowRight size={18} />
               </button>
             </div>
           </div>
@@ -459,7 +425,7 @@ export default function ScaneticaSite() {
                 onClick={() => setSelectedProject('factory')}
                 className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
               >
-                View Model <ArrowRight size={18} />
+                View 4K Model <ArrowRight size={18} />
               </button>
             </div>
           </div>
@@ -495,7 +461,7 @@ export default function ScaneticaSite() {
         © {new Date().getFullYear()} scanetica. Professional 3D Laser Scanning & Digital Twin Services in the USA and Canada.
       </footer>
 
-      {/* Animated Detail View */}
+      {/* Detail View Modal */}
       <AnimatePresence>
         {selectedProject && <DetailView />}
       </AnimatePresence>
