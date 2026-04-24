@@ -2,16 +2,16 @@ import React, { useMemo, useRef, Suspense, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { ArrowRight, Target, Zap, Users } from 'lucide-react';
+import { ArrowRight, Target, Zap, Users, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // ============================================
-// 1. TERRAIN COMPONENT (Auto Light on Mobile)
+// SECTION 1: TERRAIN COMPONENT
 // ============================================
 function AnimatedTerrain({ isMobile }) {
   const terrainRef = useRef();
 
   const terrainGeometry = useMemo(() => {
-    // Use lighter terrain on mobile for better performance
     const size = isMobile ? 180 : 320;
     const segments = isMobile ? 80 : 160;
 
@@ -50,64 +50,41 @@ function AnimatedTerrain({ isMobile }) {
   });
 
   return (
-    <mesh 
-      ref={terrainRef} 
-      geometry={terrainGeometry} 
-      rotation={[-Math.PI / 2, 0, 0]}
-    >
-      <meshBasicMaterial 
-        color="#00F0FF" 
-        wireframe={true} 
-        transparent 
-        opacity={0.9} 
-      />
+    <mesh ref={terrainRef} geometry={terrainGeometry} rotation={[-Math.PI / 2, 0, 0]}>
+      <meshBasicMaterial color="#00F0FF" wireframe={true} transparent opacity={0.9} />
     </mesh>
   );
 }
 
 // ============================================
-// 2. 3D MODEL VIEWER (Reusable Component)
+// SECTION 2: 3D MODEL VIEWER WITH LOADING SPINNER
 // ============================================
-function ProjectViewer({ 
-  modelPath, 
-  scale = 0.5, 
-  position = [0, -1, 0],
-  cameraPosition = [0, 9, 13],
-  cameraTarget = [0, 3, 0],
-  tilt = [0, 0, 0],
-  enableZoom = false 
-}) {
+function ProjectViewer({ modelPath, scale = 0.5, position = [0, -1, 0], cameraPosition = [0, 9, 13], cameraTarget = [0, 3, 0], tilt = [0, 0, 0], enableZoom = false }) {
   const { scene } = useGLTF(modelPath);
 
   return (
-    <Canvas 
-      camera={{ position: cameraPosition, fov: 44 }}
-      style={{ background: '#000000' }}
-    >
+    <Canvas camera={{ position: cameraPosition, fov: 44 }} style={{ background: '#000000' }}>
       <ambientLight intensity={0.8} />
       <directionalLight position={[12, 16, 6]} intensity={1.5} />
       
-      <Suspense fallback={null}>
-        <primitive 
-          object={scene} 
-          scale={scale} 
-          position={position} 
-          rotation={tilt} 
-        />
+      <Suspense fallback={
+        <div className="absolute inset-0 flex items-center justify-center z-50">
+          <div className="flex flex-col items-center gap-3 text-white">
+            <Loader2 className="w-8 h-8 animate-spin text-[#00F0FF]" />
+            <p className="text-sm">Loading 3D Model...</p>
+          </div>
+        </div>
+      }>
+        <primitive object={scene} scale={scale} position={position} rotation={tilt} />
       </Suspense>
       
-      <OrbitControls 
-        autoRotate 
-        autoRotateSpeed={0.14} 
-        enableZoom={enableZoom}
-        target={cameraTarget}
-      />
+      <OrbitControls autoRotate autoRotateSpeed={0.14} enableZoom={enableZoom} target={cameraTarget} />
     </Canvas>
   );
 }
 
 // ============================================
-// 3. NAVIGATION BAR
+// SECTION 3: NAVIGATION BAR
 // ============================================
 function Navbar() {
   const scrollTo = (id) => {
@@ -119,11 +96,7 @@ function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#05070F]/95 backdrop-blur-lg border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-20">
         <div className="flex items-center gap-3">
-          <img 
-            src="/scanetica_logo.png" 
-            alt="Scanetica Logo" 
-            className="h-11 w-auto drop-shadow-md" 
-          />
+          <img src="/scanetica_logo.png" alt="Scanetica Logo" className="h-11 w-auto drop-shadow-md" />
         </div>
 
         <div className="hidden md:flex items-center gap-9 text-sm font-medium">
@@ -133,10 +106,7 @@ function Navbar() {
           <button onClick={() => scrollTo('contact')} className="hover:text-[#00F0FF] transition-colors">Contact</button>
         </div>
 
-        <button 
-          onClick={() => scrollTo('contact')}
-          className="px-6 py-2.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl flex items-center gap-2 transition-all active:scale-95"
-        >
+        <button onClick={() => scrollTo('contact')} className="px-6 py-2.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl flex items-center gap-2 transition-all active:scale-95">
           Get a Quote <ArrowRight size={18} />
         </button>
       </div>
@@ -145,21 +115,81 @@ function Navbar() {
 }
 
 // ============================================
-// 4. MAIN WEBSITE
+// SECTION 4: MAIN APP
 // ============================================
 export default function ScaneticaSite() {
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
 
-  // Detect mobile device for lighter terrain
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Preload all 4K models for faster loading
+  useEffect(() => {
+    useGLTF.preload("/models/67th_st_pit__pheonix_a_4k.glb");
+    useGLTF.preload("/models/headquarters_building_office_building_4k.glb");
+    useGLTF.preload("/models/highway_lnterchange_overpass_railway_village_4k.glb");
+    useGLTF.preload("/models/linde_factory_industrial_installation_4k.glb");
+  }, []);
+
+  // ============================================
+  // DETAIL VIEW WITH SMOOTH ANIMATION
+  // ============================================
+  const DetailView = () => {
+    const getModelConfig = () => {
+      switch (selectedProject) {
+        case 'mining': return { path: "/models/67th_st_pit__pheonix_a_4k.glb", title: "67th Street Open Pit Mine", subtitle: "MINING • USA 2025" };
+        case 'office': return { path: "/models/headquarters_building_office_building_4k.glb", title: "Downtown Headquarters Tower", subtitle: "COMMERCIAL REAL ESTATE • CANADA 2025" };
+        case 'highway': return { path: "/models/highway_lnterchange_overpass_railway_village_4k.glb", title: "Major Highway Interchange", subtitle: "INFRASTRUCTURE • USA 2025" };
+        case 'factory': return { path: "/models/linde_factory_industrial_installation_4k.glb", title: "Linde Industrial Facility", subtitle: "OIL & GAS • CANADA 2025" };
+        default: return null;
+      }
+    };
+
+    const config = getModelConfig();
+    if (!config) return null;
+
+    return (
+      <AnimatePresence>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] bg-[#05070F]"
+        >
+          <nav className="fixed top-0 left-0 right-0 z-[110] bg-[#05070F]/95 backdrop-blur-lg border-b border-white/10">
+            <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-20">
+              <img src="/scanetica_logo.png" alt="Scanetica Logo" className="h-11 w-auto drop-shadow-md" />
+              <button 
+                onClick={() => setSelectedProject(null)}
+                className="px-6 py-2.5 border border-white/30 hover:bg-white/10 rounded-2xl text-sm font-medium flex items-center gap-2 transition-all"
+              >
+                ← Back to Projects
+              </button>
+            </div>
+          </nav>
+
+          <div className="pt-20 h-screen">
+            <div className="h-full">
+              <ProjectViewer 
+                modelPath={config.path}
+                scale={0.15}
+                position={[0, 0, 0]}
+                cameraPosition={[0, 10, 15]}
+                cameraTarget={[0, 3, 0]}
+                tilt={[0, 0, 0]}
+                enableZoom={true}
+              />
+            </div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  };
 
   return (
     <div className="bg-[#05070F] text-[#E0E7FF] overflow-hidden">
@@ -168,30 +198,16 @@ export default function ScaneticaSite() {
       {/* HERO SECTION */}
       <section className="min-h-screen flex items-center relative pt-20 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Canvas 
-            camera={{ position: [0, 78, 105], fov: 50 }} 
-            className="w-full h-full"
-            style={{ background: '#05070F' }}
-            gl={{ 
-              powerPreference: "high-performance",
-              antialias: !isMobile,        // Disable antialias on mobile
-              alpha: true 
-            }}
-          >
+          <Canvas camera={{ position: [0, 78, 105], fov: 50 }} className="w-full h-full" style={{ background: '#05070F' }}>
             <ambientLight intensity={0.6} />
             <directionalLight position={[50, 80, 30]} intensity={1.2} />
-            
             <AnimatedTerrain isMobile={isMobile} />
-            
             <fog attach="fog" args={['#05070F', 85, 220]} />
           </Canvas>
         </div>
 
-        {/* Loading Fallback (prevents white screen) */}
         <div className="absolute inset-0 flex items-center justify-center z-5 pointer-events-none">
-          <div className="text-center text-white/50 text-sm">
-            Loading 3D Experience...
-          </div>
+          <div className="text-center text-white/50 text-sm">Loading 3D Experience...</div>
         </div>
 
         <div className="absolute inset-0 bg-[#05070F]/50 z-10" />
@@ -200,7 +216,6 @@ export default function ScaneticaSite() {
           <div className="inline-flex items-center gap-2 px-5 py-1.5 rounded-full bg-white/10 text-sm border border-white/20">
             <div className="w-2 h-2 bg-[#00F0FF] rounded-full animate-pulse" /> 
             Serving USA & Canada Nationwide 
-            
             <div className="flex items-center gap-1 ml-1">
               <img src="/US.png" alt="USA Flag" className="h-4 w-auto rounded-sm" />
               <img src="/CAN.png" alt="Canada Flag" className="h-4 w-auto rounded-sm" />
@@ -217,18 +232,13 @@ export default function ScaneticaSite() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button 
-              onClick={() => document.getElementById('contact').scrollIntoView({ behavior: 'smooth' })}
-              className="group px-10 py-4 bg-[#00F0FF] text-[#05070F] font-semibold rounded-3xl text-xl flex items-center justify-center gap-3 hover:bg-white transition-all active:scale-[0.985]"
-            >
-              Get a Custom Quote 
-              <ArrowRight className="group-hover:translate-x-1 transition" />
+            <button onClick={() => document.getElementById('contact').scrollIntoView({ behavior: 'smooth' })} 
+                    className="group px-10 py-4 bg-[#00F0FF] text-[#05070F] font-semibold rounded-3xl text-xl flex items-center justify-center gap-3 hover:bg-white transition-all active:scale-[0.985]">
+              Get a Custom Quote <ArrowRight className="group-hover:translate-x-1 transition" />
             </button>
             
-            <button 
-              onClick={() => document.getElementById('technology').scrollIntoView({ behavior: 'smooth' })}
-              className="px-10 py-4 border border-white/30 hover:bg-white/10 rounded-3xl text-xl transition-all text-white"
-            >
+            <button onClick={() => document.getElementById('technology').scrollIntoView({ behavior: 'smooth' })} 
+                    className="px-10 py-4 border border-white/30 hover:bg-white/10 rounded-3xl text-xl transition-all text-white">
               Explore Our Technology
             </button>
           </div>
@@ -261,19 +271,15 @@ export default function ScaneticaSite() {
       <section id="technology" className="bg-black py-24 border-y border-white/10">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col items-center text-center gap-12 md:grid md:grid-cols-2 md:items-center md:text-left md:gap-16">
-            
             <div>
               <div className="text-[#00F0FF] text-sm tracking-[4px] font-medium mb-4">ADVANCED TECHNOLOGY</div>
-              
               <h2 className="text-5xl md:text-7xl font-semibold tracking-tighter leading-none mb-6 md:mb-8 text-white">
                 LiDAR & Photogrammetry<br />for Digital Twins
               </h2>
-              
               <p className="text-xl md:text-2xl text-[#C8D0FF] mb-8 md:mb-10 max-w-lg mx-auto md:mx-0">
                 We combine survey-grade terrestrial LiDAR, drone photogrammetry, and advanced processing software to deliver 
                 precise 3D scanning results and digital twins across the USA and Canada.
               </p>
-              
               <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                 {["Leica RTC360", "Trimble X12", "FARO Focus Premium", "DJI Matrice LiDAR", "RealityCapture", "Autodesk BIM 360"].map((tech, i) => (
                   <div key={i} className="px-5 py-2 bg-white/10 rounded-full text-sm border border-white/10">{tech}</div>
@@ -281,7 +287,6 @@ export default function ScaneticaSite() {
               </div>
             </div>
 
-            {/* 3D Model Viewer */}
             <div className="h-[520px] w-full rounded-3xl overflow-hidden border border-white/10 bg-black">
               <ProjectViewer 
                 modelPath="/models/thermal_power_plant_chimney_8k.glb"
@@ -297,7 +302,7 @@ export default function ScaneticaSite() {
         </div>
       </section>
 
-      {/* FEATURED PROJECTS */}
+      {/* FEATURED PROJECTS - WITH LOADING SPINNERS */}
       <section id="cases" className="max-w-7xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
           <div className="text-[#00F0FF] text-sm tracking-[4px] font-medium mb-4">REAL RESULTS</div>
@@ -308,10 +313,9 @@ export default function ScaneticaSite() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          
           {/* Mining Pit */}
           <div className="group relative overflow-hidden rounded-3xl h-[520px] bg-zinc-950 border border-white/10 flex flex-col">
-            <div className="h-[320px] bg-black">
+            <div className="h-[320px] bg-black relative">
               <ProjectViewer 
                 modelPath="/models/67th_st_pit__pheonix_a_1k.glb"
                 scale={0.2}
@@ -325,17 +329,23 @@ export default function ScaneticaSite() {
             <div className="p-8 flex-1 flex flex-col text-center md:text-left">
               <div className="text-[#00F0FF] text-sm tracking-widest mb-2">MINING • USA 2025</div>
               <h3 className="text-4xl font-semibold tracking-tight mb-4 text-white">67th Street Open Pit Mine</h3>
-              <p className="text-[#C8D0FF] text-lg flex-1">
+              <p className="text-[#C8D0FF] text-lg flex-1 mb-6">
                 High-resolution photogrammetry scan of a large open-pit copper mine in Phoenix, Arizona.
               </p>
+              <button 
+                onClick={() => setSelectedProject('mining')}
+                className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
+              >
+                View 4K Model <ArrowRight size={18} />
+              </button>
             </div>
           </div>
 
           {/* Office Building */}
           <div className="group relative overflow-hidden rounded-3xl h-[520px] bg-zinc-950 border border-white/10 flex flex-col">
-            <div className="h-[320px] bg-black">
+            <div className="h-[320px] bg-black relative">
               <ProjectViewer 
-                modelPath="/models/headquarters_building_office_building_4k.glb"
+                modelPath="/models/headquarters_building_office_building_1k.glb"
                 scale={0.05}
                 position={[0, 0, 0]}
                 cameraPosition={[-5, 5, 15]}
@@ -347,17 +357,23 @@ export default function ScaneticaSite() {
             <div className="p-8 flex-1 flex flex-col text-center md:text-left">
               <div className="text-[#00F0FF] text-sm tracking-widest mb-2">COMMERCIAL REAL ESTATE • CANADA 2025</div>
               <h3 className="text-4xl font-semibold tracking-tight mb-4 text-white">Downtown Headquarters Tower</h3>
-              <p className="text-[#C8D0FF] text-lg flex-1">
+              <p className="text-[#C8D0FF] text-lg flex-1 mb-6">
                 Complete as-built photogrammetry scan of a 28-story office headquarters in Toronto.
               </p>
+              <button 
+                onClick={() => setSelectedProject('office')}
+                className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
+              >
+                View 4K Model <ArrowRight size={18} />
+              </button>
             </div>
           </div>
 
           {/* Highway Interchange */}
           <div className="group relative overflow-hidden rounded-3xl h-[520px] bg-zinc-950 border border-white/10 flex flex-col">
-            <div className="h-[320px] bg-black">
+            <div className="h-[320px] bg-black relative">
               <ProjectViewer 
-                modelPath="/models/highway_lnterchange_overpass_railway_village_4k.glb"
+                modelPath="/models/highway_lnterchange_overpass_railway_village_1k.glb"
                 scale={0.1}
                 position={[0, -2.4, 0]}
                 cameraPosition={[0, 9.5, 13.5]}
@@ -369,17 +385,23 @@ export default function ScaneticaSite() {
             <div className="p-8 flex-1 flex flex-col text-center md:text-left">
               <div className="text-[#00F0FF] text-sm tracking-widest mb-2">INFRASTRUCTURE • USA 2025</div>
               <h3 className="text-4xl font-semibold tracking-tight mb-4 text-white">Major Highway Interchange</h3>
-              <p className="text-[#C8D0FF] text-lg flex-1">
+              <p className="text-[#C8D0FF] text-lg flex-1 mb-6">
                 Large-scale LiDAR + photogrammetry scan of a complex highway interchange in Chicago.
               </p>
+              <button 
+                onClick={() => setSelectedProject('highway')}
+                className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
+              >
+                View 4K Model <ArrowRight size={18} />
+              </button>
             </div>
           </div>
 
           {/* Industrial Factory */}
           <div className="group relative overflow-hidden rounded-3xl h-[520px] bg-zinc-950 border border-white/10 flex flex-col">
-            <div className="h-[320px] bg-black">
+            <div className="h-[320px] bg-black relative">
               <ProjectViewer 
-                modelPath="/models/linde_factory_industrial_installation_4k.glb"
+                modelPath="/models/linde_factory_industrial_installation_1k.glb"
                 scale={0.1}
                 position={[0, -1.3, 0]}
                 cameraPosition={[0, 9, 12.5]}
@@ -391,12 +413,17 @@ export default function ScaneticaSite() {
             <div className="p-8 flex-1 flex flex-col text-center md:text-left">
               <div className="text-[#00F0FF] text-sm tracking-widest mb-2">OIL & GAS • CANADA 2025</div>
               <h3 className="text-4xl font-semibold tracking-tight mb-4 text-white">Linde Industrial Facility</h3>
-              <p className="text-[#C8D0FF] text-lg flex-1">
+              <p className="text-[#C8D0FF] text-lg flex-1 mb-6">
                 Detailed photogrammetry scan of a major industrial gas processing facility in Alberta.
               </p>
+              <button 
+                onClick={() => setSelectedProject('factory')}
+                className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
+              >
+                View 4K Model <ArrowRight size={18} />
+              </button>
             </div>
           </div>
-
         </div>
       </section>
 
@@ -428,6 +455,11 @@ export default function ScaneticaSite() {
       <footer className="bg-[#05070F] border-t border-white/10 py-16 text-center text-sm text-white/50">
         © {new Date().getFullYear()} scanetica. Professional 3D Laser Scanning & Digital Twin Services in the USA and Canada.
       </footer>
+
+      {/* Animated Detail View */}
+      <AnimatePresence>
+        {selectedProject && <DetailView />}
+      </AnimatePresence>
     </div>
   );
 }
