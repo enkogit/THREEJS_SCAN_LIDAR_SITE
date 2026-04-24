@@ -419,7 +419,7 @@ export default function ScaneticaSite() {
           <div className="group relative overflow-hidden rounded-3xl h-[520px] bg-zinc-950 border border-white/10 flex flex-col">
             <div className="h-[320px] bg-black relative overflow-hidden">
               <img 
-                src="/models/headquarters_building_office_building_4k.png" 
+                src="/models/headquarters_building_office_building_1k.png" 
                 alt="Downtown Headquarters Tower - 3D Scan Preview" 
                 className="w-full h-full object-cover"
               />
@@ -444,7 +444,7 @@ export default function ScaneticaSite() {
           <div className="group relative overflow-hidden rounded-3xl h-[520px] bg-zinc-950 border border-white/10 flex flex-col">
             <div className="h-[320px] bg-black relative overflow-hidden">
               <img 
-                src="/models/highway_lnterchange_overpass_railway_village_4k.png" 
+                src="/models/highway_lnterchange_overpass_railway_village_1k.png" 
                 alt="Major Highway Interchange - 3D Scan Preview" 
                 className="w-full h-full object-cover"
               />
@@ -469,7 +469,7 @@ export default function ScaneticaSite() {
           <div className="group relative overflow-hidden rounded-3xl h-[520px] bg-zinc-950 border border-white/10 flex flex-col">
             <div className="h-[320px] bg-black relative overflow-hidden">
               <img 
-                src="/models/linde_factory_industrial_installation_4k.png" 
+                src="/models/linde_factory_industrial_installation_1k.png" 
                 alt="Linde Industrial Facility - 3D Scan Preview" 
                 className="w-full h-full object-cover"
               />
