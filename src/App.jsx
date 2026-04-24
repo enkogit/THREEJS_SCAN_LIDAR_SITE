@@ -6,7 +6,7 @@ import { ArrowRight, Target, Zap, Users, Loader2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ============================================
-// SECTION 1: TERRAIN COMPONENT
+// SECTION 1: TERRAIN COMPONENT (Hero Background)
 // ============================================
 function AnimatedTerrain({ isMobile }) {
   const terrainRef = useRef();
@@ -57,7 +57,7 @@ function AnimatedTerrain({ isMobile }) {
 }
 
 // ============================================
-// SECTION 2: 3D MODEL VIEWER
+// SECTION 2: 3D MODEL VIEWER (Used only in Detail View)
 // ============================================
 function ProjectViewer({ modelPath, scale = 0.5, position = [0, -1, 0], cameraPosition = [0, 9, 13], cameraTarget = [0, 3, 0], tilt = [0, 0, 0], enableZoom = false }) {
   const { scene } = useGLTF(modelPath);
@@ -120,7 +120,10 @@ function Navbar() {
 export default function ScaneticaSite() {
   const [isMobile, setIsMobile] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [loadProgress, setLoadProgress] = useState(0);
 
+  // Detect mobile
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -128,7 +131,25 @@ export default function ScaneticaSite() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Preload models
+  // Initial page load progress bar (fake but smooth)
+  useEffect(() => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 15 + 5;
+      if (progress >= 100) {
+        progress = 100;
+        setLoadProgress(100);
+        setTimeout(() => setIsPageLoading(false), 400);
+        clearInterval(interval);
+      } else {
+        setLoadProgress(Math.min(progress, 100));
+      }
+    }, 120);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Preload 3D models (for Detail View)
   useEffect(() => {
     useGLTF.preload("/models/67th_st_pit__pheonix_a_1k.glb");
     useGLTF.preload("/models/headquarters_building_office_building_4k.glb");
@@ -137,16 +158,21 @@ export default function ScaneticaSite() {
   }, []);
 
   // ============================================
-  // DETAIL VIEW (Works on both mobile and desktop)
+  // DETAIL VIEW (3D Model - Desktop focused)
   // ============================================
   const DetailView = () => {
     const getModelConfig = () => {
       switch (selectedProject) {
-        case 'mining': return { path: "/models/67th_st_pit__pheonix_a_1k.glb", title: "67th Street Open Pit Mine", subtitle: "MINING • USA 2025" };
-        case 'office': return { path: "/models/headquarters_building_office_building_4k.glb", title: "Downtown Headquarters Tower", subtitle: "COMMERCIAL REAL ESTATE • CANADA 2025" };
-        case 'highway': return { path: "/models/highway_lnterchange_overpass_railway_village_4k.glb", title: "Major Highway Interchange", subtitle: "INFRASTRUCTURE • USA 2025" };
-        case 'factory': return { path: "/models/linde_factory_industrial_installation_4k.glb", title: "Linde Industrial Facility", subtitle: "OIL & GAS • CANADA 2025" };
-        default: return null;
+        case 'mining':
+          return { path: "/models/67th_st_pit__pheonix_a_1k.glb", title: "67th Street Open Pit Mine", subtitle: "MINING • USA 2025" };
+        case 'office':
+          return { path: "/models/headquarters_building_office_building_4k.glb", title: "Downtown Headquarters Tower", subtitle: "COMMERCIAL REAL ESTATE • CANADA 2025" };
+        case 'highway':
+          return { path: "/models/highway_lnterchange_overpass_railway_village_4k.glb", title: "Major Highway Interchange", subtitle: "INFRASTRUCTURE • USA 2025" };
+        case 'factory':
+          return { path: "/models/linde_factory_industrial_installation_4k.glb", title: "Linde Industrial Facility", subtitle: "OIL & GAS • CANADA 2025" };
+        default:
+          return null;
       }
     };
 
@@ -177,7 +203,7 @@ export default function ScaneticaSite() {
             </div>
           </div>
 
-          {/* 3D Model */}
+          {/* 3D Model Area */}
           <div className="pt-20 h-screen">
             <div className="h-full">
               <ProjectViewer 
@@ -191,6 +217,13 @@ export default function ScaneticaSite() {
               />
             </div>
           </div>
+
+          {/* Mobile Notice */}
+          {isMobile && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[120] bg-black/80 text-white text-xs px-4 py-2 rounded-full border border-white/20">
+              Best viewed on desktop • 3D models may be slow on mobile
+            </div>
+          )}
         </motion.div>
       </AnimatePresence>
     );
@@ -198,6 +231,41 @@ export default function ScaneticaSite() {
 
   return (
     <div className="bg-[#05070F] text-[#E0E7FF] overflow-hidden">
+      
+      {/* ============================================ */}
+      {/* INITIAL PAGE LOAD PROGRESS BAR */}
+      {/* ============================================ */}
+      <AnimatePresence>
+        {isPageLoading && (
+          <motion.div 
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-[#05070F] flex items-center justify-center"
+          >
+            <div className="w-full max-w-md px-6">
+              <div className="flex items-center gap-3 mb-4">
+                <img src="/scanetica_logo.png" alt="Scanetica Logo" className="h-8 w-auto" />
+                <span className="text-xl font-semibold tracking-tight">scanetica</span>
+              </div>
+              
+              <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden mb-2">
+                <motion.div 
+                  className="h-full bg-[#00F0FF] rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${loadProgress}%` }}
+                  transition={{ ease: "easeOut" }}
+                />
+              </div>
+              
+              <div className="flex justify-between text-xs text-white/50">
+                <span>Loading experience...</span>
+                <span>{Math.floor(loadProgress)}%</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Navbar />
 
       {/* HERO SECTION */}
@@ -272,7 +340,7 @@ export default function ScaneticaSite() {
         </div>
       </section>
 
-      {/* TECHNOLOGY SECTION */}
+      {/* TECHNOLOGY SECTION (Already updated to 1K by user) */}
       <section id="technology" className="bg-black py-24 border-y border-white/10">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col items-center text-center gap-12 md:grid md:grid-cols-2 md:items-center md:text-left md:gap-16">
@@ -292,9 +360,10 @@ export default function ScaneticaSite() {
               </div>
             </div>
 
+            {/* 1K Model (Updated by user) */}
             <div className="h-[520px] w-full rounded-3xl overflow-hidden border border-white/10 bg-black">
               <ProjectViewer 
-                modelPath="/models/thermal_power_plant_chimney_8k.glb"
+                modelPath="/models/thermal_power_plant_chimney_1k.glb"
                 scale={0.1}
                 position={[5, -1, -5]}
                 cameraPosition={[0, 12, 14]}
@@ -307,7 +376,9 @@ export default function ScaneticaSite() {
         </div>
       </section>
 
-      {/* FEATURED PROJECTS SECTION */}
+      {/* ============================================ */}
+      {/* FEATURED PROJECTS - NOW USING PNG SCREENSHOTS */}
+      {/* ============================================ */}
       <section id="cases" className="max-w-7xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
           <div className="text-[#00F0FF] text-sm tracking-[4px] font-medium mb-4">REAL RESULTS</div>
@@ -318,18 +389,16 @@ export default function ScaneticaSite() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Mining Pit */}
+          
+          {/* Mining Pit - PNG Screenshot */}
           <div className="group relative overflow-hidden rounded-3xl h-[520px] bg-zinc-950 border border-white/10 flex flex-col">
-            <div className="h-[320px] bg-black relative">
-              <ProjectViewer 
-                modelPath="/models/67th_st_pit__pheonix_a_1k.glb"
-                scale={0.2}
-                position={[0, 20, 0]}
-                cameraPosition={[0, 25, 14]}
-                cameraTarget={[0, 5, 0]}
-                tilt={[0, -5, 0]}
-                enableZoom={true}
+            <div className="h-[320px] bg-black relative overflow-hidden">
+              <img 
+                src="/models/67th_st_pit__pheonix_a_1k.png" 
+                alt="67th Street Open Pit Mine - 3D Scan Preview" 
+                className="w-full h-full object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
             </div>
             <div className="p-8 flex-1 flex flex-col text-center md:text-left">
               <div className="text-[#00F0FF] text-sm tracking-widest mb-2">MINING • USA 2025</div>
@@ -341,23 +410,20 @@ export default function ScaneticaSite() {
                 onClick={() => setSelectedProject('mining')}
                 className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
               >
-                View 4K Model <ArrowRight size={18} />
+                View 3D Model <ArrowRight size={18} />
               </button>
             </div>
           </div>
 
-          {/* Office Building */}
+          {/* Office Building - PNG Screenshot */}
           <div className="group relative overflow-hidden rounded-3xl h-[520px] bg-zinc-950 border border-white/10 flex flex-col">
-            <div className="h-[320px] bg-black relative">
-              <ProjectViewer 
-                modelPath="/models/headquarters_building_office_building_1k.glb"
-                scale={0.05}
-                position={[0, 0, 0]}
-                cameraPosition={[-5, 5, 15]}
-                cameraTarget={[0, 2, 0]}
-                tilt={[0, 0, 0]}
-                enableZoom={true}
+            <div className="h-[320px] bg-black relative overflow-hidden">
+              <img 
+                src="/models/headquarters_building_office_building_4k.png" 
+                alt="Downtown Headquarters Tower - 3D Scan Preview" 
+                className="w-full h-full object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
             </div>
             <div className="p-8 flex-1 flex flex-col text-center md:text-left">
               <div className="text-[#00F0FF] text-sm tracking-widest mb-2">COMMERCIAL REAL ESTATE • CANADA 2025</div>
@@ -369,23 +435,20 @@ export default function ScaneticaSite() {
                 onClick={() => setSelectedProject('office')}
                 className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
               >
-                View 4K Model <ArrowRight size={18} />
+                View 3D Model <ArrowRight size={18} />
               </button>
             </div>
           </div>
 
-          {/* Highway Interchange */}
+          {/* Highway Interchange - PNG Screenshot */}
           <div className="group relative overflow-hidden rounded-3xl h-[520px] bg-zinc-950 border border-white/10 flex flex-col">
-            <div className="h-[320px] bg-black relative">
-              <ProjectViewer 
-                modelPath="/models/highway_lnterchange_overpass_railway_village_1k.glb"
-                scale={0.1}
-                position={[0, -2.4, 0]}
-                cameraPosition={[0, 9.5, 13.5]}
-                cameraTarget={[0, 3.2, 0]}
-                tilt={[0.1, -0.15, 0]}
-                enableZoom={true}
+            <div className="h-[320px] bg-black relative overflow-hidden">
+              <img 
+                src="/models/highway_lnterchange_overpass_railway_village_4k.png" 
+                alt="Major Highway Interchange - 3D Scan Preview" 
+                className="w-full h-full object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
             </div>
             <div className="p-8 flex-1 flex flex-col text-center md:text-left">
               <div className="text-[#00F0FF] text-sm tracking-widest mb-2">INFRASTRUCTURE • USA 2025</div>
@@ -397,23 +460,20 @@ export default function ScaneticaSite() {
                 onClick={() => setSelectedProject('highway')}
                 className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
               >
-                View 4K Model <ArrowRight size={18} />
+                View 3D Model <ArrowRight size={18} />
               </button>
             </div>
           </div>
 
-          {/* Industrial Factory */}
+          {/* Industrial Factory - PNG Screenshot */}
           <div className="group relative overflow-hidden rounded-3xl h-[520px] bg-zinc-950 border border-white/10 flex flex-col">
-            <div className="h-[320px] bg-black relative">
-              <ProjectViewer 
-                modelPath="/models/linde_factory_industrial_installation_1k.glb"
-                scale={0.1}
-                position={[0, -1.3, 0]}
-                cameraPosition={[0, 9, 12.5]}
-                cameraTarget={[0, 2.6, 0]}
-                tilt={[0.18, 0.05, 0]}
-                enableZoom={true}
+            <div className="h-[320px] bg-black relative overflow-hidden">
+              <img 
+                src="/models/linde_factory_industrial_installation_4k.png" 
+                alt="Linde Industrial Facility - 3D Scan Preview" 
+                className="w-full h-full object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
             </div>
             <div className="p-8 flex-1 flex flex-col text-center md:text-left">
               <div className="text-[#00F0FF] text-sm tracking-widest mb-2">OIL & GAS • CANADA 2025</div>
@@ -425,10 +485,11 @@ export default function ScaneticaSite() {
                 onClick={() => setSelectedProject('factory')}
                 className="mt-auto w-full py-3.5 bg-[#00F0FF] hover:bg-white text-[#05070F] font-semibold rounded-2xl text-lg transition-all active:scale-[0.985] flex items-center justify-center gap-2"
               >
-                View 4K Model <ArrowRight size={18} />
+                View 3D Model <ArrowRight size={18} />
               </button>
             </div>
           </div>
+
         </div>
       </section>
 
