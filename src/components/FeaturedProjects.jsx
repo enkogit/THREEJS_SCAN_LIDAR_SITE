@@ -33,7 +33,7 @@ export default function FeaturedProjects({ onProjectClick }) {
       id: 'factory',
       image: "/models/linde_factory_industrial_installation_1k.png",
       category: "OIL & GAS • CANADA 2025",
-      title: "Linde Industrial Facility",
+      title: "Industrial Facility",
       description: "Detailed photogrammetry scan of a major industrial gas processing facility in Alberta."
     }
   ];
